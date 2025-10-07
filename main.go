@@ -1,9 +1,9 @@
 package main
 
 import (
-	"arg-calc/lexer"
-	"arg-calc/parse"
 	"fmt"
+	"geocalc/lexer"
+	"geocalc/parse"
 	"os"
 )
 

@@ -1,8 +1,8 @@
 package parse
 
 import (
-	"arg-calc/lexer"
 	"fmt"
+	"geocalc/lexer"
 	"log"
 	"os"
 	"strconv"
