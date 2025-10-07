@@ -10,7 +10,6 @@ import (
 
 type Parser struct {
 	input       []lexer.Token
-	accumulator int
 	current_pos int
 }
 
@@ -22,6 +21,8 @@ func (self *Parser) Parse() (result int) {
 	output := parse_tokens(self, 0, 1)
 	return output
 }
+
+// this needs to be cleaned up
 func parse_tokens(parser *Parser, accumulator_in int, weight int) int {
 	current_token := grab_token(parser)
 	current_weight := weight
@@ -45,17 +46,34 @@ func parse_tokens(parser *Parser, accumulator_in int, weight int) int {
 			next_operator_weight, isEOF := peek_token_weight(parser)
 			if current_weight < next_operator_weight {
 				accumulator += parse_tokens(parser, local_accumulator, next_operator_weight)
-				parser.accumulator += local_accumulator
 			} else if next_operator_weight == 0 && !isEOF {
 				fmt.Println("Syntax Error: No operator given to number")
 				os.Exit(1)
 			} else {
 				accumulator += local_accumulator
 			}
+		case lexer.SUB:
+			current_weight = 1
+			number_token := grab_token(parser)
+			local_accumulator = convtoint(number_token.Raw)
+			next_operator_weight, isEOF := peek_token_weight(parser)
+			if current_weight < next_operator_weight {
+				accumulator -= parse_tokens(parser, local_accumulator, next_operator_weight)
+			} else if next_operator_weight == 0 && !isEOF {
+				fmt.Println("Syntax Error: No operator given to number")
+				os.Exit(1)
+			} else {
+				accumulator -= local_accumulator
+			}
+
 		case lexer.MULT:
 			number_token := grab_token(parser)
 			local_accumulator := convtoint(number_token.Raw)
 			accumulator = (accumulator * local_accumulator)
+		case lexer.DIV:
+			number_token := grab_token(parser)
+			local_accumulator := convtoint(number_token.Raw)
+			accumulator = (accumulator / local_accumulator)
 		}
 		if parser.current_pos < len(parser.input) {
 			current_token = grab_token(parser)
