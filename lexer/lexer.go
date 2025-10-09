@@ -36,12 +36,24 @@ func check_if_valid_number(lexer *Lexer) {
 	for _, ch := range lexer.Current_Token[1:len(lexer.Current_Token)] {
 		if ch < '0' || ch > '9' {
 			fmt.Printf("Character: %c, is not a valid number character", ch)
-			os.Exit(1)
+			if ch == '-' {
+
+			} else {
+				os.Exit(1)
+			}
 		}
 	}
 }
 func Lex(lexer *Lexer) bool {
 	if lexer.Current_Token[0] >= '0' && lexer.Current_Token[0] <= 'r' {
+		check_if_valid_number(lexer)
+		new_token := Token{
+			T:      NUMBER,
+			Raw:    lexer.Current_Token,
+			Weight: 0,
+		}
+		lexer.Token_Buffer = append(lexer.Token_Buffer, new_token)
+	} else if lexer.Current_Token[0] == '-' && lexer.Current_Token[len(lexer.Current_Token)-1] >= '0' && lexer.Current_Token[len(lexer.Current_Token)-1] <= '9' {
 		check_if_valid_number(lexer)
 		new_token := Token{
 			T:      NUMBER,
