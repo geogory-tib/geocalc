@@ -45,11 +45,7 @@ func parse_tokens(parser *Parser, accumulator_in int) int {
 			local_accumulator = convtoint(number_token.Raw)
 			next_operator_weight, isEOF := peek_token_weight(parser)
 			if current_weight < next_operator_weight {
-				if next_operator_weight == 3 {
-					accumulator += handl_expo(parser, local_accumulator)
-				} else {
-					accumulator += parse_tokens(parser, local_accumulator)
-				}
+				accumulator += parse_tokens(parser, local_accumulator)
 			} else if next_operator_weight == 0 && !isEOF {
 				fmt.Println("Syntax Error: No operator given to number")
 				os.Exit(1)
@@ -62,11 +58,7 @@ func parse_tokens(parser *Parser, accumulator_in int) int {
 			local_accumulator = convtoint(number_token.Raw)
 			next_operator_weight, isEOF := peek_token_weight(parser)
 			if current_weight < next_operator_weight {
-				if next_operator_weight == 3 {
-					accumulator += handl_expo(parser, local_accumulator)
-				} else {
-					accumulator -= parse_tokens(parser, local_accumulator)
-				}
+				accumulator -= parse_tokens(parser, local_accumulator)
 			} else if next_operator_weight == 0 && !isEOF {
 				fmt.Println("Syntax Error: No operator given to number")
 				os.Exit(1)
@@ -80,15 +72,19 @@ func parse_tokens(parser *Parser, accumulator_in int) int {
 			local_accumulator = convtoint(number_token.Raw)
 			next_operator_weight, _ := peek_token_weight(parser)
 			if next_operator_weight > current_weight {
-				local_accumulator = handl_expo(parser, local_accumulator)
+				next_operator := grab_token(parser)
+				switch next_operator.T {
+				case lexer.EXPONENT:
+					local_accumulator = handl_expo(parser, local_accumulator)
+				default:
+					log.Fatalln("Unknown higher weight operator")
+				}
 			}
 			accumulator = (accumulator * local_accumulator)
 		case lexer.DIV:
 			current_weight = 2
 			number_token := grab_token(parser)
 			local_accumulator := convtoint(number_token.Raw)
-			accumulator = (accumulator / local_accumulator)
-			local_accumulator = convtoint(number_token.Raw)
 			next_operator_weight, _ := peek_token_weight(parser)
 			if next_operator_weight > current_weight {
 				local_accumulator = handl_expo(parser, local_accumulator)
