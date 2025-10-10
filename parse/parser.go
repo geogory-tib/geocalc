@@ -18,14 +18,14 @@ func Init_Parser(input []lexer.Token) (ret Parser) {
 	return
 }
 func (self *Parser) Parse() (result int) {
-	output := parse_tokens(self, 0, 1)
+	output := parse_tokens(self, 0) // first input to accumulator should always be 0
 	return output
 }
 
 // this needs to be cleaned up
-func parse_tokens(parser *Parser, accumulator_in int, weight int) int {
+func parse_tokens(parser *Parser, accumulator_in int) int {
 	current_token := grab_token(parser)
-	current_weight := weight
+	current_weight := 0
 	local_accumulator := 0
 	accumulator := accumulator_in
 	if parser.current_pos == 1 {
@@ -45,7 +45,11 @@ func parse_tokens(parser *Parser, accumulator_in int, weight int) int {
 			local_accumulator = convtoint(number_token.Raw)
 			next_operator_weight, isEOF := peek_token_weight(parser)
 			if current_weight < next_operator_weight {
-				accumulator += parse_tokens(parser, local_accumulator, next_operator_weight)
+				if next_operator_weight == 3 {
+					accumulator += handl_expo(parser, local_accumulator)
+				} else {
+					accumulator += parse_tokens(parser, local_accumulator)
+				}
 			} else if next_operator_weight == 0 && !isEOF {
 				fmt.Println("Syntax Error: No operator given to number")
 				os.Exit(1)
@@ -58,7 +62,11 @@ func parse_tokens(parser *Parser, accumulator_in int, weight int) int {
 			local_accumulator = convtoint(number_token.Raw)
 			next_operator_weight, isEOF := peek_token_weight(parser)
 			if current_weight < next_operator_weight {
-				accumulator -= parse_tokens(parser, local_accumulator, next_operator_weight)
+				if next_operator_weight == 3 {
+					accumulator += handl_expo(parser, local_accumulator)
+				} else {
+					accumulator -= parse_tokens(parser, local_accumulator)
+				}
 			} else if next_operator_weight == 0 && !isEOF {
 				fmt.Println("Syntax Error: No operator given to number")
 				os.Exit(1)
@@ -67,13 +75,28 @@ func parse_tokens(parser *Parser, accumulator_in int, weight int) int {
 			}
 
 		case lexer.MULT:
+			current_weight = 2
 			number_token := grab_token(parser)
-			local_accumulator := convtoint(number_token.Raw)
+			local_accumulator = convtoint(number_token.Raw)
+			next_operator_weight, _ := peek_token_weight(parser)
+			if next_operator_weight > current_weight {
+				local_accumulator = handl_expo(parser, local_accumulator)
+			}
 			accumulator = (accumulator * local_accumulator)
 		case lexer.DIV:
+			current_weight = 2
 			number_token := grab_token(parser)
 			local_accumulator := convtoint(number_token.Raw)
 			accumulator = (accumulator / local_accumulator)
+			local_accumulator = convtoint(number_token.Raw)
+			next_operator_weight, _ := peek_token_weight(parser)
+			if next_operator_weight > current_weight {
+				local_accumulator = handl_expo(parser, local_accumulator)
+			}
+			accumulator = (accumulator / local_accumulator)
+
+		case lexer.EXPONENT:
+			accumulator = handl_expo(parser, accumulator)
 		}
 		if parser.current_pos < len(parser.input) {
 			current_token = grab_token(parser)
@@ -81,6 +104,16 @@ func parse_tokens(parser *Parser, accumulator_in int, weight int) int {
 
 	}
 
+	return accumulator
+}
+func handl_expo(parser *Parser, accumulator_in int) int {
+	accumulator := accumulator_in
+	number_token := grab_token(parser)
+	local_accumulator := convtoint(number_token.Raw)
+	base := accumulator
+	for range local_accumulator - 1 {
+		accumulator *= base
+	}
 	return accumulator
 }
 func grab_token(parser *Parser) (ret lexer.Token) {

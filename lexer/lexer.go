@@ -6,11 +6,12 @@ import (
 )
 
 const (
-	ADD    = "add"
-	SUB    = "sub"
-	MULT   = "mult"
-	DIV    = "div"
-	NUMBER = "num"
+	ADD      = "add"
+	SUB      = "sub"
+	MULT     = "mult"
+	DIV      = "div"
+	NUMBER   = "num"
+	EXPONENT = "expo"
 )
 
 type Token struct {
@@ -45,7 +46,7 @@ func check_if_valid_number(lexer *Lexer) {
 	}
 }
 func Lex(lexer *Lexer) bool {
-	if lexer.Current_Token[0] >= '0' && lexer.Current_Token[0] <= 'r' {
+	if lexer.Current_Token[0] >= '0' && lexer.Current_Token[0] <= '9' {
 		check_if_valid_number(lexer)
 		new_token := Token{
 			T:      NUMBER,
@@ -90,6 +91,13 @@ func Lex(lexer *Lexer) bool {
 				T:      DIV,
 				Raw:    "/",
 				Weight: 2,
+			}
+			lexer.Token_Buffer = append(lexer.Token_Buffer, new_token)
+		case "^":
+			new_token := Token{
+				T:      EXPONENT,
+				Raw:    "^",
+				Weight: 3,
 			}
 			lexer.Token_Buffer = append(lexer.Token_Buffer, new_token)
 		default:
